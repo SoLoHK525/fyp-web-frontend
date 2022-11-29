@@ -1,0 +1,5 @@
+import createCache from '@emotion/cache';
+
+const cache = createCache({ key: 'css', prepend: false });
+
+export default cache;

@@ -6,17 +6,66 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier --write \"./**/*.ts\" \"./**/*.tsx\""
   },
   "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/server": "^11.10.0",
+    "@emotion/styled": "^11.10.5",
+    "@fortawesome/fontawesome-svg-core": "^6.2.1",
+    "@fortawesome/free-brands-svg-icons": "^6.2.1",
+    "@fortawesome/free-regular-svg-icons": "^6.2.1",
+    "@fortawesome/free-solid-svg-icons": "^6.2.1",
+    "@fortawesome/react-fontawesome": "^0.2.0",
+    "@monaco-editor/react": "^4.4.6",
+    "@mui/material": "^5.10.16",
+    "@mui/styles": "^5.10.16",
     "@types/node": "18.11.9",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.9",
-    "eslint": "8.28.0",
+    "axios": "^1.2.0",
     "eslint-config-next": "13.0.5",
+    "monaco-editor": "0.34.1",
+    "monaco-languageclient": "^4.0.1",
     "next": "13.0.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "typescript": "4.9.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/parser": "^5.8.1",
+    "eslint": "^7.25.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-import-resolver-babel-module": "^5.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "eslint-plugin-unused-imports": "2.0.0",
+    "husky": "^8.0.2",
+    "lint-staged": "^13.0.4",
+    "prettier": "^2.8.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "yarn eslint --fix",
+      "yarn prettier --write",
+      "bash -c tsc --noEmit"
+    ],
+    "*.{md,json}": [
+      "yarn prettier --write"
+    ],
+    "*.{css,scss,sass}": [
+      "yarn lint:css --fix"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }
