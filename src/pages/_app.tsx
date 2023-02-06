@@ -24,14 +24,31 @@ import { CacheProvider } from '@emotion/react';
 import Head from 'next/head';
 import { CssBaseline } from '@mui/material';
 import cache from '../styles/cache';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { AuthenticationProvider } from '../contexts/AuthenticationContext';
+import SplashScreen from '../components/SplashScreen';
 
 FontAwesomeConfig.autoAddCss = false;
 library.add(fas);
 library.add(far);
 library.add(fab);
 
-export default function App({ Component, pageProps}: AppProps) {
+export default function App({ Component, pageProps }: AppProps) {
+  const queryClientRef = useRef<QueryClient>();
+  if (!queryClientRef.current) {
+    queryClientRef.current = new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
+          retryDelay: attemptIndex => Math.min(2000 * 2 ** attemptIndex, 16000),
+          staleTime: Infinity,
+          cacheTime: 60000,
+        },
+      },
+    });
+  }
+
   useEffect(() => {
     // Remove the server-side injected CSS.
     const jssStyles = document.querySelector('#jss-server-side');
@@ -43,20 +60,25 @@ export default function App({ Component, pageProps}: AppProps) {
   return (
     <CacheProvider value={cache}>
       <Head>
-        <meta content="initial-scale=1.0, width=device-width" name="viewport" />
-        <link href="https://fonts.gstatic.com" rel="preconnect" />
+        <meta content='initial-scale=1.0, width=device-width' name='viewport' />
+        <link href='https://fonts.gstatic.com' rel='preconnect' />
         <link
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&display=swap"
+          as='style'
+          href='https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&display=swap'
           // @ts-ignore
           onLoad="this.onload=null;this.rel='stylesheet'"
-          rel="preload"
+          rel='preload'
         />
         <title>Online Code Practice System</title>
       </Head>
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
-        <Component {...pageProps} />
+        <QueryClientProvider client={queryClientRef.current}>
+          <AuthenticationProvider>
+            <SplashScreen />
+            <Component {...pageProps} />
+          </AuthenticationProvider>
+        </QueryClientProvider>
       </ThemeProvider>
     </CacheProvider>
   );

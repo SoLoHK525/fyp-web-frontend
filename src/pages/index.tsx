@@ -1,32 +1,21 @@
-import Footer from '../components/Footer';
-import { Box, Container, Paper, Stack, Typography } from '@mui/material';
-import CodeEditor from '../components/CodeEditor';
+import { useAuthentication } from '../contexts/AuthenticationContext';
+import Landing from '../containers/landing';
 
 export default function Home() {
+  const auth = useAuthentication();
+
+  if(!auth.initialized) {
+    return <></>
+  }
+
+  if(!auth.isAuthenticated) {
+    return <Landing />
+  }
 
   return (
-    <Box minHeight='100vh'>
-      <Paper>
-        <Container>
-          <Stack spacing={3} justifyContent='center' height={300}>
-            <Typography variant='h3-bold'>
-              Online Code Practice System
-            </Typography>
-            <Typography variant="body1">
-              The system is under development.
-            </Typography>
-          </Stack>
-        </Container>
-      </Paper>
-      <Container>
-        <Box py={5}>
-          <Typography>Editor Example:</Typography>
-          <Box py={2} height={500}>
-            <CodeEditor />
-          </Box>
-        </Box>
-      </Container>
-      <Footer />
-    </Box>
+    <>
+      Welcome! { auth.user?.email }
+      <button onClick={auth.signOut}>Sign Out</button>
+    </>
   );
 }
