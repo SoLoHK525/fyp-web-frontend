@@ -3,8 +3,10 @@ import { useQuery } from 'react-query';
 import tuple from '../../../utils/tuple';
 import { getUserProject } from '../../../api/user';
 import { ApiError } from '../../../api/_base';
-import CodeEditor from '../../../components/CodeEditor';
 import { Box } from '@mui/material';
+import CodeEditor from '../../../components/CodeEditor';
+import { useCallback } from 'react';
+import { OnChange } from '@monaco-editor/react';
 
 const ProjectPage = () => {
   const router = useRouter();
@@ -26,6 +28,10 @@ const ProjectPage = () => {
     }),
   });
 
+  const onChange: OnChange = useCallback((value, ev) => {
+    console.log(value);
+  }, []);
+
   return (
     <div>
       <h1>Project Page</h1>
@@ -35,12 +41,13 @@ const ProjectPage = () => {
       <div>
         {data?.name}
       </div>
-      <Box sx={{ height: '80vh', width: '100%'}}>
-        <CodeEditor />
+      <Box sx={{ height: '80vh', width: '100%' }}>
+        {
+          <CodeEditor onChange={onChange} />
+        }
       </Box>
     </div>
   );
 };
-
 
 export default ProjectPage;

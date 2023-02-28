@@ -26,7 +26,7 @@ const Landing = () => {
         <Box py={5}>
           <Typography>Editor Example:</Typography>
           <Box py={2} height={500}>
-            <CodeEditor />
+            <CodeEditor onChange={() => {}} />
           </Box>
         </Box>
       </Container>
