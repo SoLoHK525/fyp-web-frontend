@@ -19,8 +19,7 @@ import { language, conf } from 'monaco-editor/esm/vs/basic-languages/python/pyth
 import { WebsocketProvider } from 'y-websocket';
 import { Doc } from 'yjs';
 import { MonacoBinding } from 'y-monaco';
-import { styled } from '@mui/material/styles';
-import { updateMarkerChanges } from 'yjs/dist/src/types/AbstractType';
+import { typeOf } from 'react-is';
 
 loader.config({
   monaco: monaco,
@@ -84,6 +83,7 @@ function createWebSocket(url: string) {
   };
   return webSocket;
 }
+
 function createLanguageClient(transports: MessageTransports): MonacoLanguageClient {
   return new MonacoLanguageClient({
     name: 'Sample Language Client',
@@ -93,7 +93,7 @@ function createLanguageClient(transports: MessageTransports): MonacoLanguageClie
       // disable the default error handler
       errorHandler: {
         error: () => ({ action: ErrorAction.Continue }),
-        closed: () => ({ action: CloseAction.DoNotRestart }),
+        closed: () => ({ action: CloseAction.Restart }),
       },
     },
     // create a language client connection from the JSON RPC connection on demand
@@ -109,36 +109,19 @@ const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange }
   const divEl = useRef<HTMLDivElement>(null);
   const editor = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   console.log(MonacoLanguageClient);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let lspWebSocket: WebSocket;
 
   useEffect(() => {
     const model = monaco.editor.createModel(value, 'python', monaco.Uri.parse('inmemory:///model.json'));
 
+    let style: HTMLStyleElement;
+
     if (divEl.current) {
       // append new css to head
-      const style = document.createElement('style');
-      style.innerHTML = `
-        .yRemoteSelection {
-            background-color: rgb(250, 129, 0, .5)
-        }
-        .yRemoteSelectionHead {
-            position: absolute;
-            border-left: orange solid 2px;
-            border-top: orange solid 2px;
-            border-bottom: orange solid 2px;
-            height: 100%;
-            box-sizing: border-box;
-        }
-        .yRemoteSelectionHead::after {
-            position: absolute;
-            content: ' ';
-            border: 3px solid orange;
-            border-radius: 4px;
-            left: -4px;
-            top: -5px;
-        }
-      `;
+      style = document.createElement('style');
+
       document.head.appendChild(style);
 
       // @ts-ignore
@@ -149,7 +132,7 @@ const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange }
         theme: 'vs-dark',
       });
 
-      const url = createUrl('localhost', '3008', '/python');
+      const url = createUrl('localhost', '3010', '/test');
 
       MonacoServices.install();
 
@@ -171,14 +154,78 @@ const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange }
       // YJS bindings
       const ydoc = new Doc();
 
-      const provider = new WebsocketProvider('wss://demos.yjs.dev', 'monaco', ydoc);
+      const provider = new WebsocketProvider('ws://localhost:3010/yjs', 'project', ydoc, {
+        params: {
+
+        },
+      });
+
+      provider.ws?.addEventListener('close', () => {
+        provider.ws?.close();
+        provider.disconnect();
+      })
+
+      // const provider = new WebsocketProvider('wss://demos.yjs.dev', 'monaco', ydoc);
       const type = ydoc.getText('monaco');
 
-      provider.awareness.setLocalStateField('user', { name: 'test' + Math.random(), color: Math.floor(Math.random()*16777215).toString(16) })
+      provider.awareness.on('change', () => {
+        console.log('wtf');
+
+        let cssText = `
+          .yRemoteSelection {
+              background-color: rgb(250, 129, 0, .5);
+          }
+          .yRemoteSelectionHead {
+              position: absolute;
+              content: '';
+              border-left: orange solid 2px;
+              border-top: orange solid 2px;
+              border-bottom: orange solid 2px;
+              height: 100%;
+              box-sizing: border-box;
+              z-index: 1000;
+          }
+        `;
+
+
+        provider.awareness.getStates().forEach((user, key) => {
+          console.debug(key);
+
+          cssText += `
+          .yRemoteSelectionHead::after {
+              position: absolute;
+              content: '';
+              border: 3px solid orange;
+              border-radius: 4px;
+              left: -4px;
+              top: -5px;
+              z-index: 1000;
+          }
+          
+          .yRemoteSelectionHead-${key}:hover::before {
+              position: absolute;
+              background: orange;
+              content: '${key}';
+              border: 3px solid orange;
+              border-radius: 4px;
+              left: -4px;
+              top: -20px;
+              z-index: 1000;
+          }
+          `;
+        });
+
+        style.innerHTML = cssText;
+      });
+
+      provider.awareness.setLocalStateField('user', {
+        name: 'test' + Math.random(),
+        color: Math.floor(Math.random() * 16777215).toString(16),
+      });
 
       const monacoBinding = new MonacoBinding(type, editorModel, new Set([editor.current]), provider.awareness);
 
-      divEl.current
+      divEl.current;
 
       // @ts-ignore
       window.example = { provider, ydoc, type, monacoBinding };
