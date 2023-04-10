@@ -2,6 +2,10 @@ const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const path = require("path");
 
 module.exports = {
+  reactStrictMode: false,
+  images: {
+    domains: ["placehold.co"]
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

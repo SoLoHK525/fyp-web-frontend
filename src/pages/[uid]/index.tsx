@@ -19,7 +19,7 @@ export const UserProfile = () => {
 
   return (
     <div>
-      profile of { data?.email }
+      profile of { data?.payload.email }
     </div>
   );
 };

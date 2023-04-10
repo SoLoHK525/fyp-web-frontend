@@ -12,6 +12,7 @@ interface LoginResponse {
 export interface User {
   id: string;
   email: string;
+  username: string;
 }
 
 export const loginWithEmail = (payload: LoginPayload) => request<LoginResponse>('post', '/auth/login', payload, false);

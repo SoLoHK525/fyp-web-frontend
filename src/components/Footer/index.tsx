@@ -17,6 +17,7 @@ import { styled } from '@mui/material/styles';
 
 import Link from '../Link';
 import Icon from '../Icon';
+import Image from 'next/image';
 
 interface LinkTabProps {
   tab: FooterLinkGroup;
@@ -37,7 +38,7 @@ const LinkTab: FC<LinkTabProps> = ({ tab }) => {
   return (
     <Box>
       <Box mb={2}>
-        <Typography variant='h5-bold'>{tab.title}</Typography>
+        <Typography variant='subtitle2'>{tab.title}</Typography>
       </Box>
       <Stack spacing={1}>
         {tab.links.map((child, index) => {
@@ -69,7 +70,7 @@ export interface FooterContent {
 
 const Footer: FC = () => {
   const footerContent: FooterContent = {
-    slogan: "Practice Makes Perfect",
+    slogan: 'Practice makes perfect',
     social_media: [],
     link_groups: [
       {
@@ -79,9 +80,34 @@ const Footer: FC = () => {
             text: 'Home',
             url: '/',
             target: 'self',
-          }
-        ]
-      }
+          },
+        ],
+      },
+      {
+        title: 'Coding',
+        links: [
+          {
+            text: 'Projects',
+            url: '/projects',
+            target: 'self',
+          },
+          {
+            text: 'Groups',
+            url: '/groups',
+            target: 'self',
+          },
+        ],
+      },
+      {
+        title: 'Community',
+        links: [
+          {
+            text: 'Forum',
+            url: '/forum',
+            target: 'self',
+          },
+        ],
+      },
     ],
   };
 
@@ -90,18 +116,21 @@ const Footer: FC = () => {
   }
 
   return (
-    <Paper>
-      <Container maxWidth="xl">
+    <Paper elevation={0}>
+      <Divider />
+      <Container>
         <Box px={4} py={8}>
           <Grid container>
             <Grid item lg={4} sm={12}>
               <Box mb={2}>
-                <a href="/">
-                  Logo
-                </a>
+                <Link href='/'>
+                  <Box display='flex' alignItems='center'>
+                    <Image src='/colinker_logo.svg' color='#fff' width={645 / 3} height={140 / 3} alt='logo' />
+                  </Box>
+                </Link>
               </Box>
-              <Box mb={2} width="80%">
-                <Typography textTransform="uppercase" variant="h4-bold">
+              <Box mb={2} width='80%'>
+                <Typography textTransform='uppercase' variant='subtitle2'>
                   {footerContent.slogan}
                 </Typography>
               </Box>
@@ -112,7 +141,7 @@ const Footer: FC = () => {
               </Box>
             </Grid>
             <Grid item lg={8} sm={12}>
-              <Grid container justifyContent="space-evenly" mb={8} spacing={8}>
+              <Grid container justifyContent='space-evenly' mb={8} spacing={8}>
                 {footerContent?.link_groups.map((link, index) => {
                   return (
                     <Grid item key={index} md={3} sm={6} xs={12}>
@@ -125,20 +154,20 @@ const Footer: FC = () => {
           </Grid>
           <Divider />
           <Box
-            display="flex"
-            flexWrap="wrap"
-            justifyContent="space-between"
+            display='flex'
+            flexWrap='wrap'
+            justifyContent='space-between'
             mt={4}
           >
             <Box mb={2}>
-              <Typography>Online Code Practice System</Typography>
+              <Typography variant='body2'>Colinker - Online Code Practice System</Typography>
             </Box>
-            <Stack direction="row" spacing={2}>
-              <FooterLink href="/privacy-policy">
-                Privacy Policy
+            <Stack direction='row' spacing={2}>
+              <FooterLink href='/privacy-policy'>
+                <Typography variant='body2'>Privacy Policy</Typography>
               </FooterLink>
-              <FooterLink href="/terms-condition">
-                Terms of Use
+              <FooterLink href='/terms-condition'>
+                <Typography variant='body2'>Terms of Use</Typography>
               </FooterLink>
             </Stack>
           </Box>
@@ -184,7 +213,7 @@ const SocialMediaLink: FC<SocialMediaLinkProps> = ({ social }) => {
   }, [social.type]);
 
   return (
-    <SocialMediaLinkWrapper href={social.link} target="_blank">
+    <SocialMediaLinkWrapper href={social.link} target='_blank'>
       <Icon icon={icon} variant={variant} />
     </SocialMediaLinkWrapper>
   );

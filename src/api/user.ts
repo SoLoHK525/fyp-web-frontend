@@ -1,5 +1,6 @@
 import { request } from './_base';
 import { User } from './auth';
+import { Project } from './project';
 
 export const getUserProfile = (
   {
@@ -11,11 +12,6 @@ export const getUserProfile = (
 export interface getUserProjectParams {
   username: string;
   projectId: string;
-}
-
-export interface Project {
-  id: string;
-  name: string;
 }
 
 export const getUserProject = ({

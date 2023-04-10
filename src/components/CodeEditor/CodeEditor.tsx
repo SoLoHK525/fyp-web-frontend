@@ -19,6 +19,7 @@ import { language, conf } from 'monaco-editor/esm/vs/basic-languages/python/pyth
 import { WebsocketProvider } from 'y-websocket';
 import { Doc } from 'yjs';
 import { MonacoBinding } from 'y-monaco';
+import { parse as parseUrl } from 'url';
 import { typeOf } from 'react-is';
 
 loader.config({
@@ -27,6 +28,7 @@ loader.config({
 
 export interface CodeEditorProps {
   onChange: OnChange;
+  endpoint: string;
 }
 
 function setupKeybindings(editor: any) {
@@ -58,10 +60,6 @@ Python Code Example
 print("Hello World")
 `;
 
-export function createUrl(hostname: string, port: string, path: string): string {
-  const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  return normalizeUrl(`${protocol}://${hostname}:${port}${path}`);
-}
 
 function createWebSocket(url: string) {
   const webSocket = new WebSocket(url);
@@ -105,7 +103,7 @@ function createLanguageClient(transports: MessageTransports): MonacoLanguageClie
   });
 }
 
-const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange }: any) => {
+const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange, endpoint }: any) => {
   const divEl = useRef<HTMLDivElement>(null);
   const editor = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   console.log(MonacoLanguageClient);
@@ -113,10 +111,17 @@ const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let lspWebSocket: WebSocket;
 
+  const url = parseUrl(endpoint);
+
   useEffect(() => {
     const model = monaco.editor.createModel(value, 'python', monaco.Uri.parse('inmemory:///model.json'));
 
     let style: HTMLStyleElement;
+
+    const isSecure = url.protocol === 'https:';
+    const webSocketEndpointUrl = (isSecure ? 'wss' : 'ws') + '://' + url.hostname + ':' + (url.port || isSecure ? 443 : 80);
+
+    console.log(webSocketEndpointUrl);
 
     if (divEl.current) {
       // append new css to head
@@ -132,11 +137,10 @@ const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange }
         theme: 'vs-dark',
       });
 
-      const url = createUrl('localhost', '3010', '/test');
-
       MonacoServices.install();
 
-      lspWebSocket = createWebSocket(url);
+      const lspWebSocketUrl = normalizeUrl(webSocketEndpointUrl + '/test');
+      lspWebSocket = createWebSocket(lspWebSocketUrl);
 
       editor.current.onDidChangeModelContent(() => {
         onChange(editor.current?.getValue());
@@ -154,16 +158,16 @@ const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange }
       // YJS bindings
       const ydoc = new Doc();
 
-      const provider = new WebsocketProvider('ws://localhost:3010/yjs', 'project', ydoc, {
-        params: {
+      const websocketUrl = webSocketEndpointUrl + '/yjs';
 
-        },
+      const provider = new WebsocketProvider(websocketUrl, 'project', ydoc, {
+        params: {},
       });
 
       provider.ws?.addEventListener('close', () => {
         provider.ws?.close();
         provider.disconnect();
-      })
+      });
 
       // const provider = new WebsocketProvider('wss://demos.yjs.dev', 'monaco', ydoc);
       const type = ydoc.getText('monaco');

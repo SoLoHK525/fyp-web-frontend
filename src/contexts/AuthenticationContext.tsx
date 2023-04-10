@@ -10,17 +10,20 @@ import { Auth } from '../types/Auth';
 import { clientStorage } from '../utils/client-storage';
 import jwt_decode, { JwtPayload } from 'jwt-decode';
 import { ApiError } from '../api/_base';
+import { useRouter } from 'next/router';
 
 export const AuthenticationContext = createContext<{
   user: Nullable<User>;
   isAuthenticated: boolean;
   initialized: boolean;
-  signIn: (email: string, password: string) => void;
+  signIn: (email: string, password: string) => Promise<any>;
   signOut: () => void;
+  error: string;
 }>({
   isAuthenticated: false,
   initialized: false,
   user: null,
+  error: '',
   signIn: async (_, __) => {
     return null;
   },
@@ -45,6 +48,7 @@ const initialUser: User = {
 
 
 export const AuthenticationProvider = ({ children }: any) => {
+    const router = useRouter();
     const containsAuth = clientStorage.get<Auth>('auth') != null;
     const queryClient = useQueryClient();
 
@@ -53,11 +57,11 @@ export const AuthenticationProvider = ({ children }: any) => {
     const { isFetched } = useQuery('getProfile', getProfile, {
         retry: false,
         enabled: containsAuth,
-        onSuccess: (user) => {
-          setUser(user);
+        onSuccess: (data) => {
+          setUser(data.payload);
         },
         onError: (error: ApiError) => {
-          if (error.error_code === 'unauthorized') {
+          if (error.status_code === 401) {
             clearAuth();
           }
         },
@@ -66,9 +70,9 @@ export const AuthenticationProvider = ({ children }: any) => {
 
     const initialized = isFetched || !containsAuth;
 
-    const { mutate: userLoginRequest } = useMutation(loginWithEmail, {
+    const { mutate: userLoginRequest, error } = useMutation(loginWithEmail, {
       onSuccess: async res => {
-        const token = res.access_token;
+        const token = res.payload.access_token;
         const { exp, iat } = jwt_decode<JwtPayload>(token);
 
         setAuth({
@@ -77,24 +81,34 @@ export const AuthenticationProvider = ({ children }: any) => {
           issuedAt: iat ?? 0,
           token: token,
         });
-      },
-      onError(err) {
-        console.error(err);
+
+        if(clientStorage.get('redirect') != null) {
+          const url = clientStorage.get<string>('redirect') ?? "/";
+
+          router.push(url);
+          clientStorage.remove('redirect');
+          return;
+        } else{
+          await router.push('/');
+        }
+
+        await queryClient.invalidateQueries('getProfile');
       },
     });
 
-    const login = useCallback((email: string, password: string) => {
+    const login = useCallback(async (email: string, password: string) => {
       return userLoginRequest({
         email,
         password,
       });
     }, [userLoginRequest]);
 
-    const logout = useCallback(() => {
+    const logout = useCallback(async () => {
+      await router.push('/');
       clearAuth();
       setUser(initialUser);
       queryClient.clear();
-    }, [queryClient]);
+    }, [queryClient, router]);
 
     return (
       <AuthenticationContext.Provider
@@ -104,6 +118,7 @@ export const AuthenticationProvider = ({ children }: any) => {
           user: user,
           signIn: login,
           signOut: logout,
+          error: error ?? (error as any),
         }}
       >
         {children}

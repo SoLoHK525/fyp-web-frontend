@@ -28,6 +28,9 @@ import { useEffect, useRef } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthenticationProvider } from '../contexts/AuthenticationContext';
 import SplashScreen from '../components/SplashScreen';
+import NextProgress from "next-progress";
+
+import '../styles/globalStyle.css';
 
 FontAwesomeConfig.autoAddCss = false;
 library.add(fas);
@@ -80,6 +83,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </AuthenticationProvider>
         </QueryClientProvider>
       </ThemeProvider>
+      <NextProgress delay={300} options={{ showSpinner: true }} height="5px" color="#333" />
     </CacheProvider>
   );
 }

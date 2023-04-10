@@ -1,14 +1,12 @@
-import CustomAppBar from '../containers/AppBar';
+import CustomAppBar from '../../containers/AppBar';
 import { Box, Button, Container, Divider, IconButton, Stack, Typography } from '@mui/material';
-import Footer from '../components/Footer';
-import ProjectList from '../containers/Projects/ProjectList';
-import Spacer from '../components/Spacer';
+import Footer from '../../components/Footer';
+import Spacer from '../../components/Spacer';
 import { Refresh } from '@mui/icons-material';
 import { useQueryClient } from 'react-query';
-import ProtectedContent from '../containers/Auth/ProtectedContent';
-import ThreadList from '../containers/Forum/ThreadList';
+import ThreadList from '../../containers/Forum/ThreadList';
 
-export default function Projects() {
+export default function Forum() {
   const queryClient = useQueryClient();
 
   const refreshProjects = () => {
@@ -25,7 +23,7 @@ export default function Projects() {
             <Spacer />
             <Stack direction='row' spacing={2} color='black'>
               <Button variant='outlined' color='inherit' onClick={refreshProjects}><Refresh /></Button>
-              <Button variant='outlined' color='inherit'>Create Project</Button>
+              <Button variant='outlined' color='inherit'>New Thread</Button>
             </Stack>
           </Box>
           <Divider />

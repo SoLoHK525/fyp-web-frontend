@@ -5,7 +5,7 @@
  * Link
  *
  */
-import React from 'react';
+import React, { CSSProperties } from 'react';
 
 import { styled } from '@mui/material/styles';
 import clsx from 'clsx';
@@ -17,9 +17,10 @@ import { FCC } from '../../types/react';
 export interface LinkProps extends NextLinkProps {
   active?: boolean; // force active state
   target?: HTMLAnchorElement['target'];
+  color?: CSSProperties['color'];
 }
 
-const Link: FCC<LinkProps> = ({ children, active, target, ...rest }) => {
+const Link: FCC<LinkProps> = ({ children, active, target, color, ...rest }) => {
   const router = useRouter();
   const isActive = active || router.pathname === rest.href;
 
@@ -33,7 +34,9 @@ const Link: FCC<LinkProps> = ({ children, active, target, ...rest }) => {
   };
 
   return (
-    <CustomAnchor href={rest.href} className={clsx({ linkActive: isActive })} >
+    <CustomAnchor href={rest.href} style={{
+      color: color,
+    }} className={clsx({ linkActive: isActive })} >
         {renderChildren()}
     </CustomAnchor>
   );

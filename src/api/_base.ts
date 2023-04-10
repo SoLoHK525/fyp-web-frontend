@@ -1,6 +1,7 @@
 import { create } from 'apisauce';
 import { clientStorage } from '../utils/client-storage';
 import { Auth } from '../types/Auth';
+import { isArray } from 'lib0/array';
 
 const isSSR = typeof window === 'undefined';
 
@@ -63,11 +64,13 @@ async function request<T>(
     const { payload, ...rest } = res.data as ApiResponseSuccess<T>;
 
     return {
-      ...payload,
+      payload,
       metadata: rest,
     };
   }).catch((error: Error) => {
-
+    if (error instanceof ApiError) {
+      throw error;
+    }
     throw new ApiError(error.name, error.message, 0);
   });
 }
@@ -80,6 +83,24 @@ interface BaseApiResponse {
 export interface ApiResponseSuccess<T = any> extends BaseApiResponse {
   success: true;
   payload: T;
+}
+
+export interface PaginationResponse<T> {
+  data: T[];
+  meta: {
+    itemsPerPage: number;
+    totalItems: number;
+    currentPage: number;
+    totalPages: number;
+    sortBy: any;
+  };
+  links: {
+    first: string;
+    previous: string;
+    next: string;
+    last: string;
+    current: string;
+  };
 }
 
 export interface ApiResponseFailed<E = any> extends BaseApiResponse {

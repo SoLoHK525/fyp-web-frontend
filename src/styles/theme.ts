@@ -5,19 +5,32 @@ import { blue, grey, orange } from '@mui/material/colors';
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
 const color = {
-  disabled: '#585858',
-}
+  disabled: '#dedde4',
+};
 
 const theme = {
   spacing: 8,
   palette: {
+    vscode: {
+      panel: {
+        background: '#1e1e1e',
+      },
+      sidebar: {
+        background: '#333333',
+        foreground: '#ccc',
+        foregroundInactive: '#6a6a6a',
+        hoverBackground: '#252526',
+        hoverForeground: '#ffffff',
+      }
+    } as VSCodeTheme,
     primary: {
-      dark: '#0879FF;',
-      main: '#0879F9;',
-      light: '#0879E4;',
+      main: '#f50057',
     },
     secondary: {
-      main: '#FF8F76',
+      main: '#283593',
+    },
+    background: {
+      default: '#ffffff',
     },
     tertiary: {
       main: '#EDE8D6',
@@ -34,16 +47,22 @@ const theme = {
     info: {
       main: '#8FC39E',
     },
-    background: {
-      default: '#000',
-      paper: '#222',
-    },
     text: {
-      primary: '#fff',
+      primary: '#000',
       secondary: '#5D5A6F',
     },
-    divider: color.disabled,
+    white: {
+      main: '#fff',
+    },
+    disabled: {
+      main: '#dedde4',
+    },
     button: {
+      white: {
+        default: '#fff',
+        hover: '#fff',
+        active: '#fff',
+      },
       orange: {
         default: orange[600],
         hover: orange[700],
@@ -82,6 +101,7 @@ const theme = {
         },
       },
     } as { [key in ButtonColors]: ButtonColor },
+    divider: '#dedde4',
     input: {
       background: {
         default: '#fff',
@@ -102,18 +122,14 @@ const theme = {
         error: '#ff4d00',
       },
     },
-    red: {
-      main: '#F00',
-    },
   },
   breakpoints: {
     values: {
-      xss: 0,
-      xs: 375,
+      xs: 0,
       sm: 768,
       md: 1024,
-      lg: 1440,
-      xl: 1600,
+      lg: 1280,
+      xl: 1440,
     },
   },
   typography: {
@@ -234,6 +250,19 @@ const theme = {
   },
 };
 
+interface VSCodeTheme {
+  panel: {
+    background: string;
+  },
+  sidebar: {
+    background: string;
+    foreground: string;
+    foregroundInactive: string;
+    hoverBackground: string;
+    hoverForeground: string;
+  }
+}
+
 /**
  * Extend MUI theme interface
  */
@@ -271,6 +300,8 @@ declare module '@mui/material/styles' {
    */
   interface Palette {
     red: PaletteColor;
+    white: PaletteColor;
+    vscode: VSCodeTheme;
   }
 
   interface PaletteOptions {
@@ -293,7 +324,7 @@ declare module '@mui/material/Typography' {
   }
 }
 
-export type ButtonColors = 'orange' | 'blue' | 'light' | 'dark' | 'transparent';
+export type ButtonColors = 'white' | 'orange' | 'blue' | 'light' | 'dark' | 'transparent';
 
 export interface ButtonTextColor extends Omit<ButtonColor, 'text'> {
   contained: string;
@@ -306,6 +337,8 @@ export interface ButtonColor {
   text?: ButtonTextColor;
 }
 
+// export const muiTheme = createTheme(theme);
+// @ts-ignore
 export const muiTheme = responsiveFontSizes(createTheme(theme));
 
 export default theme;

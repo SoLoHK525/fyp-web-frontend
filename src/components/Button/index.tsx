@@ -11,7 +11,7 @@ import ButtonUnstyled, {
 import { SxProps } from '@mui/material';
 import { styled } from '@mui/system';
 
-import { ButtonColor, ButtonColors } from '../../../../styles/theme';
+import { ButtonColor, ButtonColors } from '../../styles/theme';
 
 export interface RootButtonProps extends Omit<ButtonUnstyledProps, 'color'> {
   color?: ButtonColors | ButtonColor;
