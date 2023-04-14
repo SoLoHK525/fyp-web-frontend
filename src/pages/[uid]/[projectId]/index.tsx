@@ -11,7 +11,7 @@ const CodeEditor = dynamic(() => import('../../../components/CodeEditor/CodeEdit
   ssr: false,
 });
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { OnChange } from '@monaco-editor/react';
 import { createProjectSession, getProjectExecutor } from '../../../api/project';
 
@@ -19,6 +19,7 @@ import TopBar from '../../../containers/Projects/Editor/TopBar';
 import VSCodePanelBackground from '../../../components/VSCode/VSCodePanelBackground';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { styled } from '@mui/material/styles';
+import FileExplorer from '../../../containers/Projects/Editor/FileExplorer';
 
 const BottomTab = dynamic(() => import('../../../containers/Projects/Editor/BottomTab'), { ssr: false });
 
@@ -33,6 +34,12 @@ const ProjectPage = () => {
   const projectId = pid as string;
 
   const queryClient = useQueryClient();
+
+  const [selectedFile, setSelectedFile] = useState<string>("");
+
+  const onFileSelect = (id: string) => {
+    setSelectedFile(id);
+  }
 
   const { data, isSuccess } = useQuery(tuple(['getUserProject', {
     username,
@@ -81,12 +88,14 @@ const ProjectPage = () => {
   });
 
   const onChange: OnChange = useCallback((value, ev) => {
-    console.log(value);
+    // console.log(value);
   }, []);
 
   const loading = getProjectExecutorLoading || getProjectExecutorData?.payload.status === 'pending';
 
   const project = data?.payload;
+
+  const [sideBarIndex, setSideBarIndex] = useState(0);
 
   if (!project) {
     return <>Loading</>;
@@ -96,24 +105,36 @@ const ProjectPage = () => {
     <Box display='flex' flexDirection='column' width='100vw' height='100vh' overflow='hidden'>
       <TopBar project={project} />
       <Box display='flex' flex={1}>
-        <SideBar />
+        <SideBar onChange={setSideBarIndex} value={sideBarIndex} />
         <VSCodePanelBackground sx={{ flexGrow: 1 }}>
-          <PanelGroup direction='vertical'>
-            <Panel defaultSize={80} minSize={20}>
+          <PanelGroup direction={'horizontal'}>
             {
-              loading || !getProjectExecutorData ? (
-                  <ExecutorLoading />
-                ) :
-                (
-                  <CodeEditor endpoint={getProjectExecutorData.payload.endpoint} onChange={onChange} />
-                )
+              sideBarIndex === 0 && (
+                <Panel defaultSize={20}>
+                  <FileExplorer onFileSelect={onFileSelect} />
+                </Panel>
+              )
             }
-            </Panel>
-            <CustomResizeHandle />
-            <Panel defaultSize={20} minSize={20}>
-              <Box mx={1}>
-                <BottomTab />
-              </Box>
+            <VerticalResizeHandle />
+            <Panel defaultSize={80}>
+              <PanelGroup direction='vertical'>
+                <Panel defaultSize={80} minSize={20}>
+                  {
+                    loading || !getProjectExecutorData ? (
+                        <ExecutorLoading />
+                      ) :
+                      (
+                        <CodeEditor endpoint={getProjectExecutorData.payload.endpoint} file={selectedFile} onChange={onChange} />
+                      )
+                  }
+                </Panel>
+                <CustomResizeHandle />
+                <Panel defaultSize={20} minSize={20}>
+                  <Box mx={1}>
+                    <BottomTab />
+                  </Box>
+                </Panel>
+              </PanelGroup>
             </Panel>
           </PanelGroup>
         </VSCodePanelBackground>
@@ -122,36 +143,71 @@ const ProjectPage = () => {
   );
 };
 
-const CustomResizeHandle = styled(PanelResizeHandle)(({ theme }) => ({
-  height: 16,
-  marginBottom: -8,
+const VerticalResizeHandle = styled(PanelResizeHandle)((
+  {
+    theme,
+  },
+) => ({
+  width: 16,
   zIndex: 10,
-  position: "relative",
-//  seudoelement
+  position: 'relative',
+  marginLeft: -8,
   '&::before': {
-    top: 8,
-    position: "absolute",
+    top: 0,
+    left: 8,
+    position: 'absolute',
     content: '""',
     display: 'block',
-    width: '100%',
-    height: 1,
-    backgroundColor: "#333",
+    width: '1px',
+    height: '100%',
+    backgroundColor: '#333',
     transition: 'background-color 0.2s',
   },
   '&:hover::before': {
-    backgroundColor: "#c5c5c5",
+    backgroundColor: '#c5c5c5',
   },
   '&:active::before': {
-    backgroundColor: "#c5c5c5",
-  }
+    backgroundColor: '#c5c5c5',
+  },
 }));
 
+const CustomResizeHandle = styled(PanelResizeHandle)((
+  {
+    theme,
+  },
+) => (
+  {
+    height: 16,
+    marginBottom: -8,
+    zIndex: 10,
+    position: 'relative',
+    '&::before': {
+      top: 8,
+      position: 'absolute',
+      content: '""',
+      display: 'block',
+      width: '100%',
+      height: 1,
+      backgroundColor: '#333',
+      transition: 'background-color 0.2s',
+    },
+    '&:hover::before': {
+      backgroundColor: '#c5c5c5',
+    },
+    '&:active::before':
+      {
+        backgroundColor: '#c5c5c5',
+      },
+  }
+));
+
 const ExecutorLoading = () => {
-  return (
-    <VSCodePanelBackground display='flex' justifyContent='center' alignItems='center' flex={1}>
-      <CircularProgress />
-    </VSCodePanelBackground>
-  );
-};
+    return (
+      <VSCodePanelBackground display='flex' justifyContent='center' alignItems='center' flex={1}>
+        <CircularProgress />
+      </VSCodePanelBackground>
+    );
+  }
+;
 
 export default ProjectPage;

@@ -27,7 +27,6 @@ const instance = getApiInstance();
 export type RequestMethod = 'get' | 'post' | 'put' | 'delete' | 'head';
 
 const getMethodInstance = (method: RequestMethod) => {
-  console.log(instance.getBaseURL());
   return instance[method];
 };
 
@@ -37,6 +36,7 @@ async function request<T>(
   data: Record<string, any> = {},
   injectToken = true,
   headers: Record<string, any> = {},
+  baseURL?: string,
 ) {
   const instance = getMethodInstance(method);
 
@@ -45,6 +45,7 @@ async function request<T>(
   }
 
   return await instance(path, data, {
+    baseURL,
     headers: headers,
   }).then(res => {
     if (res.status === 401) {

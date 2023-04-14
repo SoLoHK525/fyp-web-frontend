@@ -31,6 +31,7 @@ import SplashScreen from '../components/SplashScreen';
 import NextProgress from "next-progress";
 
 import '../styles/globalStyle.css';
+import 'react-complex-tree/lib/style-modern.css';
 
 FontAwesomeConfig.autoAddCss = false;
 library.add(fas);

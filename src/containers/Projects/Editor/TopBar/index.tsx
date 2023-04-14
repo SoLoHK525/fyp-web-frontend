@@ -7,6 +7,7 @@ import VSCodeEditorButton from '../../../../components/VSCode/VSCodeEditorButton
 import { useRouter } from 'next/router';
 import routes from '../../../../utils/routes';
 import { ChevronLeft } from '@mui/icons-material';
+import AppBarMenu from '../../../AppBar/AppBarMenu';
 
 export default function (
   {
@@ -41,7 +42,7 @@ export default function (
       </Box>
       <Box px={2}>
         <Box>
-          <ReactAvatar name={auth.user?.username} size="24" round />
+          <AppBarMenu />
         </Box>
       </Box>
     </VSCodeSideBarBackground>
