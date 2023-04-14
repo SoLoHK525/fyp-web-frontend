@@ -23,6 +23,9 @@ import { parse as parseUrl } from 'url';
 import { typeOf } from 'react-is';
 import createYjsWebSocketMonacoBinding from './YjsMonacoBinding';
 
+import protobuf from 'protobufjs';
+import message from "../../protobuf/json/message.json";
+
 loader.config({
   monaco: monaco,
 });
@@ -97,7 +100,7 @@ function createLanguageClient(transports: MessageTransports): MonacoLanguageClie
 }
 
 const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange, endpoint, file }: any) => {
-  const divEl = useRef<HTMLDivElement>(null);
+  const   divEl = useRef<HTMLDivElement>(null);
   const editor = useRef<monaco.editor.IStandaloneCodeEditor>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -165,7 +168,7 @@ const Editor: FC<CodeEditorProps> = ({ language, defaultValue, value, onChange, 
 
         yjsWebsocket.then((yjsWebsocket) => {
           yjsWebsocket.cleanup();
-          console.log("clean up mother fucker", yjsWebsocket)
+          console.log('clean up mother fucker', yjsWebsocket);
         });
 
         monaco.editor.getModel(modelURI)?.dispose();

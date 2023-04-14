@@ -1,0 +1,36 @@
+{
+  "nested": {
+    "fyp": {
+      "nested": {
+        "proto": {
+          "nested": {
+            "websocket": {
+              "nested": {
+                "TerminalOutput": {
+                  "fields": {
+                    "payload": {
+                      "type": "bytes",
+                      "id": 1
+                    }
+                  }
+                },
+                "WebSocketEvent": {
+                  "fields": {
+                    "event": {
+                      "type": "string",
+                      "id": 1
+                    },
+                    "terminalOutput": {
+                      "type": "TerminalOutput",
+                      "id": 2
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

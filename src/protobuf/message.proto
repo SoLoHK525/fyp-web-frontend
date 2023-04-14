@@ -1,0 +1,12 @@
+package fyp.proto.websocket;
+
+syntax = "proto3";
+
+message TerminalOutput {
+  bytes payload = 1; // becomes awesomeField
+}
+
+message WebSocketEvent {
+  string event = 1;
+  TerminalOutput terminalOutput = 2;
+}

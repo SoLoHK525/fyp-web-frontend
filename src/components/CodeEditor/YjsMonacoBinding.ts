@@ -78,10 +78,14 @@ export default function createYjsWebSocketMonacoBinding(
 }> {
   const docProvider = new Map<string, WebsocketProvider>();
   const style = injectCssStyle();
-  const rootDoc = new Doc();
+  const rootDoc = new Doc({
+    guid: file
+  });
 
   const provider = new WebsocketProvider(endpoint, 'project', rootDoc, {
-    params: {},
+    params: {
+      guid: file
+    },
   });
 
   provider.ws?.addEventListener('close', () => {
@@ -107,23 +111,36 @@ export default function createYjsWebSocketMonacoBinding(
     editor.updateOptions({
       readOnly: !isSynced,
     });
+    //
+    //
+    // const folder = rootDoc.getMap<Doc>();
+    //
+    // let fileDoc: Doc;
+    // if(folder.has(file)) {
+    //   fileDoc = folder.get(file) as Doc;
+    //   fileDoc.load();
+    // }else{
+    //   fileDoc = new Doc();
+    //   folder.set(file, fileDoc);
+    // }
 
-    rootDoc.subdocs.forEach((doc) => {
-      // const folder = rootDoc.getMap();
-
-      const webSocketProvider = new WebsocketProvider(endpoint, 'project', doc, {
-        params: {
-          guid: doc.guid,
-        },
-        awareness: provider.awareness,
-      });
-
-
-      webSocketProvider.ws?.addEventListener('close', () => {
-        webSocketProvider.ws?.close();
-        webSocketProvider.disconnect();
-      });
-    });
+    // rootDoc.subdocs.forEach((doc) => {
+    //
+    //
+    //
+    //   // const webSocketProvider = new WebsocketProvider(endpoint, 'project', doc, {
+    //   //   params: {
+    //   //     guid: doc.guid,
+    //   //   },
+    //   //   awareness: provider.awareness,
+    //   // });
+    //   //
+    //   //
+    //   // webSocketProvider.ws?.addEventListener('close', () => {
+    //   //   webSocketProvider.ws?.close();
+    //   //   webSocketProvider.disconnect();
+    //   // });
+    // });
   });
 
   const editorModel = editor.getModel();

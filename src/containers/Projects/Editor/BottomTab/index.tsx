@@ -4,8 +4,15 @@ import VSCodePanelBackground from '../../../../components/VSCode/VSCodePanelBack
 import { XTerm } from 'xterm-for-react';
 import { useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { forwardRef, useEffect, useRef } from 'react';
 
-export default function() {
+const Tab = (
+  {
+    terminal: Terminal
+  }: {
+    terminal: () => JSX.Element;
+  }
+) => {
   const theme = useTheme();
 
   return (
@@ -18,13 +25,7 @@ export default function() {
           <VSCodeTabText>LOGS</VSCodeTabText>
         </VSCodePanelTab>
         <VSCodePanelView id='view-terminal'>
-          <XTerm
-            options={{
-              theme: {
-                background: theme.palette.vscode.panel.background,
-              },
-            }}
-          />
+          <Terminal />
         </VSCodePanelView>
         <VSCodePanelView id='view-logs'>
           Logs
@@ -33,6 +34,8 @@ export default function() {
     </VSCodePanelBackground>
   );
 }
+
+export default Tab;
 
 export const VSCodeTabText = styled('div')(({ theme }) => ({
   fontWeight: 'bold',

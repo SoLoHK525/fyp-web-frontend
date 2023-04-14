@@ -33,3 +33,20 @@ export const createProjectSession = (project_owner: string, project_name: string
 type GetAllUserProjectsDto = Project[];
 
 export const getAllUserProjects = () => request<GetAllUserProjectsDto>('get', `/project`);
+
+export interface getProjectFilesResponse {
+  directories: [{
+    id: string,
+    name: string,
+    parent: string,
+    files: string[],
+    directories: string[],
+  }],
+  files: [
+    {
+      id: string,
+      name: string,
+      parent: string,
+    }
+  ]
+}

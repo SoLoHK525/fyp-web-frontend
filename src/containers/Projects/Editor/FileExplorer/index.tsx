@@ -23,24 +23,8 @@ import { request } from '../../../../api/_base';
 import tuple from '../../../../utils/tuple';
 import { useRef, useState } from 'react';
 import ContextMenu from './ContextMenu';
+import { getProjectFilesResponse } from '../../../../api/project';
 
-
-interface getProjectFilesResponse {
-  directories: [{
-    id: string,
-    name: string,
-    parent: string,
-    files: string[],
-    directories: string[],
-  }],
-  files: [
-    {
-      id: string,
-      name: string,
-      parent: string,
-    }
-  ]
-}
 
 export default function FileExplorer(
   {
@@ -235,7 +219,7 @@ export default function FileExplorer(
           );
         }}
       >
-        <Tree ref={tree} treeId='tree-2' rootItem='root' treeLabel='Tree Example' />
+        <Tree ref={tree} treeId='tree-2' rootItem='00000000-0000-0000-0000-000000000000' treeLabel='Tree Example' />
       </UncontrolledTreeEnvironment>
       <ContextMenu
         actions={[

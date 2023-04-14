@@ -2,8 +2,8 @@ import { useRouter } from 'next/router';
 import { useQuery, useQueryClient } from 'react-query';
 import tuple from '../../../utils/tuple';
 import { getUserProject } from '../../../api/user';
-import { ApiError } from '../../../api/_base';
-import { Box, CircularProgress } from '@mui/material';
+import { ApiError, request } from '../../../api/_base';
+import { Box, Button, CircularProgress, useTheme } from '@mui/material';
 
 import dynamic from 'next/dynamic';
 
@@ -11,15 +11,20 @@ const CodeEditor = dynamic(() => import('../../../components/CodeEditor/CodeEdit
   ssr: false,
 });
 
-import { useCallback, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { OnChange } from '@monaco-editor/react';
-import { createProjectSession, getProjectExecutor } from '../../../api/project';
+import { createProjectSession, getProjectExecutor, getProjectFilesResponse } from '../../../api/project';
 
 import TopBar from '../../../containers/Projects/Editor/TopBar';
 import VSCodePanelBackground from '../../../components/VSCode/VSCodePanelBackground';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { styled } from '@mui/material/styles';
 import FileExplorer from '../../../containers/Projects/Editor/FileExplorer';
+import { parse as parseUrl } from 'url';
+import Spacer from '../../../components/Spacer';
+import { PlayArrow } from '@mui/icons-material';
+
+import { XTerm } from 'xterm-for-react';
 
 const BottomTab = dynamic(() => import('../../../containers/Projects/Editor/BottomTab'), { ssr: false });
 
@@ -35,11 +40,13 @@ const ProjectPage = () => {
 
   const queryClient = useQueryClient();
 
-  const [selectedFile, setSelectedFile] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<string>('');
 
   const onFileSelect = (id: string) => {
     setSelectedFile(id);
-  }
+  };
+
+  const isSSR = typeof window === 'undefined';
 
   const { data, isSuccess } = useQuery(tuple(['getUserProject', {
     username,
@@ -87,6 +94,17 @@ const ProjectPage = () => {
     refetchOnMount: true,
   });
 
+  const { data: getProjectFiles } = useQuery('getProjectFiles', () => {
+    return request<getProjectFilesResponse>(
+      'get',
+      '/api/file',
+      {},
+      true,
+      {},
+      'https://fyp-exector.iamkevin.xyz',
+    );
+  });
+
   const onChange: OnChange = useCallback((value, ev) => {
     // console.log(value);
   }, []);
@@ -96,6 +114,72 @@ const ProjectPage = () => {
   const project = data?.payload;
 
   const [sideBarIndex, setSideBarIndex] = useState(0);
+
+  const endpoint = getProjectExecutorData?.payload.endpoint || '';
+
+  const theme = useTheme();
+
+  const terminalRef = useRef<any>(null);
+
+  const file = selectedFile;
+  const url = parseUrl(endpoint);
+
+  const isSecure = url.protocol === 'https:';
+  const webSocketEndpointUrl = (isSecure ? 'wss' : 'ws') + '://' + url.hostname + ':' + (url.port || isSecure ? 443 : 80);
+
+  const webSocket = useMemo(() => {
+    if (isSSR || !endpoint) {
+      return;
+    }
+
+    return new WebSocket(webSocketEndpointUrl + '/execute');
+  }, [endpoint, webSocketEndpointUrl]);
+
+  useEffect(() => {
+    if (!endpoint || !webSocket) {
+      return;
+    }
+
+    webSocket.onopen = () => {
+      console.log('Connected to server');
+    };
+
+    webSocket.onmessage = (event) => {
+
+      console.log(event.data);
+      const payload = JSON.parse(event.data) as {
+        event: string;
+        data: any;
+      };
+
+      // base64 decode to buffer
+      const buffer = Buffer.from(payload.data, 'base64');
+      const data = buffer.toString('utf-8');
+
+      terminalRef?.current?.terminal?.write(data);
+      console.log(terminalRef);
+    };
+
+    return () => {
+      webSocket.close();
+    };
+  }, [url.hostname, url.port, url.protocol, file, endpoint, webSocket]);
+
+  const currentFile = getProjectFiles?.payload.files.find((f) => f.id === selectedFile);
+
+  const writeToTerminal = (data: string) => {
+    const message = {
+      event: 'stdin',
+      data: Buffer.from(data).toString('base64'),
+    };
+
+    webSocket?.send(JSON.stringify(message));
+  };
+
+  const runCode = () => {
+    writeToTerminal('\x03\nclear');
+    writeToTerminal(`python3 ${currentFile?.name}`);
+  };
 
   if (!project) {
     return <>Loading</>;
@@ -119,19 +203,52 @@ const ProjectPage = () => {
             <Panel defaultSize={80}>
               <PanelGroup direction='vertical'>
                 <Panel defaultSize={80} minSize={20}>
-                  {
-                    loading || !getProjectExecutorData ? (
-                        <ExecutorLoading />
-                      ) :
-                      (
-                        <CodeEditor endpoint={getProjectExecutorData.payload.endpoint} file={selectedFile} onChange={onChange} />
-                      )
-                  }
+                  <Box height='100%' width='100%'>
+                    <Box height='30px' flex={1} px={2} display='flex' alignItems='center'>
+                      <Box>
+                      </Box>
+                      <Spacer />
+                      <Box>
+                        {
+                          currentFile?.name.endsWith('.py') && (
+                            <Button
+                              onClick={runCode}
+                              style={{ color: 'limegreen' }}>
+                              <PlayArrow fontSize='small' color='inherit' />
+                            </Button>
+                          )
+                        }
+                      </Box>
+                    </Box>
+                    {
+                      loading || !getProjectExecutorData ? (
+                          <ExecutorLoading />
+                        ) :
+                        (
+                          <CodeEditor endpoint={getProjectExecutorData.payload.endpoint} file={selectedFile}
+                                      onChange={onChange} />
+                        )
+                    }
+                  </Box>
                 </Panel>
                 <CustomResizeHandle />
                 <Panel defaultSize={20} minSize={20}>
                   <Box mx={1}>
-                    <BottomTab />
+                    {
+                      !isSSR && (
+                        <BottomTab terminal={
+                          () => <XTerm
+                            ref={terminalRef}
+                            options={{
+                              theme: {
+                                background: theme.palette.vscode.panel.background,
+                              },
+                            }}
+                            onData={writeToTerminal}
+                          />
+                        } />
+                      )
+                    }
                   </Box>
                 </Panel>
               </PanelGroup>
