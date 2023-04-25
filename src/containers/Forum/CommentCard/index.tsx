@@ -7,6 +7,7 @@ import { Comment, CommentWithChildren, Post } from '../../../api/forum';
 import { Reply } from '@mui/icons-material';
 import CommentEditor from '../CommentEditor';
 import { useState } from 'react';
+import { useAuthentication } from '../../../contexts/AuthenticationContext';
 
 export interface CommentCardProps {
   comment: CommentWithChildren;
@@ -20,6 +21,7 @@ export default function CommentCard(
     post,
     comment,
   }: CommentCardProps) {
+  const auth = useAuthentication();
   const [showReplyEditor, setShowReplyEditor] = useState(false);
 
   const toggleReplyEditor = () => {
@@ -35,8 +37,8 @@ export default function CommentCard(
             textDecoration: 'none',
             color: 'inherit',
             '&:visited': {
-              color: 'inherit'
-            }
+              color: 'inherit',
+            },
           }} color='primary' href={routes.userProfile(comment.author.username)}>
             <Typography variant='subtitle1'>{comment.author.username}</Typography>
           </Link>
@@ -47,17 +49,22 @@ export default function CommentCard(
         <div className='ck-content'
              dangerouslySetInnerHTML={{ __html: comment.content ?? '' }} />
       </Box>
-      <Box pl={7}>
-        <Button onClick={toggleReplyEditor} sx={{ fontSize: 12 }} color='inherit' variant={'text'}
-                size='small'><Reply fontSize='inherit' />&nbsp; Reply</Button>
-        {
-          showReplyEditor && (
-            <CommentEditor onEditorCancelled={() => {
-              setShowReplyEditor(false);
-            }} target='comment' comment={comment} thread={threadId} post={post} />
-          )
-        }
-      </Box>
+      {
+        auth.isAuthenticated && (
+          <Box pl={7}>
+            <Button onClick={toggleReplyEditor} sx={{ fontSize: 12 }} color='inherit' variant={'text'}
+                    size='small'><Reply fontSize='inherit' />&nbsp; Reply</Button>
+            {
+              showReplyEditor && (
+                <CommentEditor onEditorCancelled={() => {
+                  setShowReplyEditor(false);
+                }} target='comment' comment={comment} thread={threadId} post={post} />
+              )
+            }
+          </Box>
+        )
+      }
+
       <Box pl={7}>
         {
           comment.children?.map((child) => (

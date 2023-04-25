@@ -1,5 +1,5 @@
 import CustomAppBar from '../containers/AppBar';
-import { Box, Button, Container, Divider, IconButton, Stack } from '@mui/material';
+import { Box, Button, Container, Divider, IconButton, Stack, Typography } from '@mui/material';
 import Footer from '../components/Footer';
 import ProjectList from '../containers/Projects/ProjectList';
 import Spacer from '../components/Spacer';
@@ -28,11 +28,7 @@ export default function Projects() {
         </Box>
         <Divider />
         <Box mt={4}>
-          {/* generate 1000 words of lorem ipsum */}
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, nisl nec ultricies aliquam, nunc nisl
-          aliquet nunc, eget aliq uam sapien nunc et nunc. Null
-          a nunc sit amet nisl lacinia aliqua
-          m nec eu nisl
+          <Typography variant='subtitle2'>Projects</Typography>
         </Box>
         <ProjectList />
       </Container>

@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { getForumThreads, Thread } from '../../../api/forum';
 import { useQuery } from 'react-query';
-import { Box, Card, Grid, Paper, Stack, Typography } from '@mui/material';
+import { Box, Card, CircularProgress, Grid, Paper, Stack, Typography } from '@mui/material';
 import Link from '../../../components/Link';
 import routes from '../../../utils/routes';
 import ReactAvatar from 'react-avatar';
@@ -31,7 +31,13 @@ const ThreadCard: FC<{
 };
 
 const ThreadList: FC = () => {
-  const { data: threads } = useQuery('getForumThreads', getForumThreads, {});
+  const { data: threads, isLoading, isRefetching } = useQuery('getForumThreads', getForumThreads, {});
+
+  if (isLoading || isRefetching) {
+    return (<div>
+      <CircularProgress />
+    </div>);
+  }
 
   return (
     <div>

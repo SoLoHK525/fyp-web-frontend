@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useQuery, useQueryClient } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
 import tuple from '../../../utils/tuple';
 import { getUserProject } from '../../../api/user';
 import { ApiError, request } from '../../../api/_base';
@@ -25,6 +25,7 @@ import Spacer from '../../../components/Spacer';
 import { PlayArrow } from '@mui/icons-material';
 
 import { XTerm } from 'xterm-for-react';
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
 const BottomTab = dynamic(() => import('../../../containers/Projects/Editor/BottomTab'), { ssr: false });
 
@@ -72,7 +73,6 @@ const ProjectPage = () => {
     enabled: !!uid && !!projectId && isSuccess,
   });
 
-
   const { data: getProjectExecutorData, isLoading: getProjectExecutorLoading } = useQuery(tuple(['getProjectExecutor', {
     username,
     projectId,
@@ -94,16 +94,26 @@ const ProjectPage = () => {
     refetchOnMount: true,
   });
 
-  const { data: getProjectFiles } = useQuery('getProjectFiles', () => {
+  const ready = getProjectExecutorData?.payload.status === 'running';
+
+  const { data: getProjectFiles, isLoading: isGetProjectFilesReloading, isRefetching: isGetProjctFilesRefetching} = useQuery(tuple(['getProjectFiles', {
+    executor_id: projectId
+  }]), () => {
     return request<getProjectFilesResponse>(
       'get',
-      '/api/file',
+      `/executor/${getProjectExecutorData?.payload.executor_id}/files`,
       {},
       true,
-      {},
-      'https://fyp-exector.iamkevin.xyz',
+      {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
     );
+  }, {
+    enabled: ready,
+    refetchOnMount: 'always',
+    cacheTime: 1
   });
+
 
   const onChange: OnChange = useCallback((value, ev) => {
     // console.log(value);
@@ -117,10 +127,6 @@ const ProjectPage = () => {
 
   const endpoint = getProjectExecutorData?.payload.endpoint || '';
 
-  const theme = useTheme();
-
-  const terminalRef = useRef<any>(null);
-
   const file = selectedFile;
   const url = parseUrl(endpoint);
 
@@ -128,60 +134,34 @@ const ProjectPage = () => {
   const webSocketEndpointUrl = (isSecure ? 'wss' : 'ws') + '://' + url.hostname + ':' + (url.port || isSecure ? 443 : 80);
 
   const webSocket = useMemo(() => {
-    if (isSSR || !endpoint) {
-      return;
-    }
+    return !isSSR && endpoint ? new ReconnectingWebSocket(webSocketEndpointUrl + '/execute', [], {
+      connectionTimeout: 1000,
+      maxRetries: Infinity,
+    }) as WebSocket : null;
+  }, [endpoint, isSSR, webSocketEndpointUrl])
 
-    return new WebSocket(webSocketEndpointUrl + '/execute');
-  }, [endpoint, webSocketEndpointUrl]);
+  const { mutate: executeCodeMutation } = useMutation('executeCode', () => {
+    return request(
+      'post',
+      '/executor/run',
+      {
+        executor_id: getProjectExecutorData?.payload.executor_id,
+        file
+      },
+      true,
+      {},
+    );
+  });
 
-  useEffect(() => {
-    if (!endpoint || !webSocket) {
-      return;
-    }
-
-    webSocket.onopen = () => {
-      console.log('Connected to server');
-    };
-
-    webSocket.onmessage = (event) => {
-
-      console.log(event.data);
-      const payload = JSON.parse(event.data) as {
-        event: string;
-        data: any;
-      };
-
-      // base64 decode to buffer
-      const buffer = Buffer.from(payload.data, 'base64');
-      const data = buffer.toString('utf-8');
-
-      terminalRef?.current?.terminal?.write(data);
-      console.log(terminalRef);
-    };
-
-    return () => {
-      webSocket.close();
-    };
-  }, [url.hostname, url.port, url.protocol, file, endpoint, webSocket]);
-
-  const currentFile = getProjectFiles?.payload.files.find((f) => f.id === selectedFile);
-
-  const writeToTerminal = (data: string) => {
-    const message = {
-      event: 'stdin',
-      data: Buffer.from(data).toString('base64'),
-    };
-
-    webSocket?.send(JSON.stringify(message));
-  };
+  const currentFile = useMemo(() => {
+    return getProjectFiles?.payload.files.find((f) => f.id === selectedFile);
+  }, [getProjectFiles?.payload.files, selectedFile]);
 
   const runCode = () => {
-    writeToTerminal('\x03\nclear');
-    writeToTerminal(`python3 ${currentFile?.name}`);
+    executeCodeMutation();
   };
 
-  if (!project) {
+  if (!project || !webSocket) {
     return <>Loading</>;
   }
 
@@ -195,7 +175,7 @@ const ProjectPage = () => {
             {
               sideBarIndex === 0 && (
                 <Panel defaultSize={20}>
-                  <FileExplorer onFileSelect={onFileSelect} />
+                  <FileExplorer projectFiles={getProjectFiles} endpoint={endpoint} onFileSelect={onFileSelect} />
                 </Panel>
               )
             }
@@ -210,7 +190,7 @@ const ProjectPage = () => {
                       <Spacer />
                       <Box>
                         {
-                          currentFile?.name.endsWith('.py') && (
+                          (!isGetProjectFilesReloading || !isGetProjectFilesReloading) && currentFile?.name.endsWith('.py') && (
                             <Button
                               onClick={runCode}
                               style={{ color: 'limegreen' }}>
@@ -221,7 +201,7 @@ const ProjectPage = () => {
                       </Box>
                     </Box>
                     {
-                      loading || !getProjectExecutorData ? (
+                      loading || !ready ? (
                           <ExecutorLoading />
                         ) :
                         (
@@ -234,21 +214,7 @@ const ProjectPage = () => {
                 <CustomResizeHandle />
                 <Panel defaultSize={20} minSize={20}>
                   <Box mx={1}>
-                    {
-                      !isSSR && (
-                        <BottomTab terminal={
-                          () => <XTerm
-                            ref={terminalRef}
-                            options={{
-                              theme: {
-                                background: theme.palette.vscode.panel.background,
-                              },
-                            }}
-                            onData={writeToTerminal}
-                          />
-                        } />
-                      )
-                    }
+                    <BottomTab webSocket={webSocket} />
                   </Box>
                 </Panel>
               </PanelGroup>

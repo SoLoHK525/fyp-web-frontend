@@ -85,19 +85,6 @@ const CommentEditor = (
     <Box>
       <TextEditor
         config={{
-          removePlugins: [
-            'Heading',
-            'FontFamily',
-            'FontSize',
-            'FontBackgroundColor',
-            'MediaEmbed',
-            'Image',
-            'ImageCaption',
-            'ImageStyle',
-            'ImageToolbar',
-            'MediaEmbed',
-            'MediaEmbedToolbar',
-          ],
           readOnly: isCommentLoading || isReplyLoading,
           placeholder: 'Write a comment...',
         }}

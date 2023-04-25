@@ -7,6 +7,7 @@ import routes from '../../../utils/routes';
 import ReactAvatar from 'react-avatar';
 import moment from 'moment';
 import Pagination from '@mui/material/Pagination';
+import tuple from '../../../utils/tuple';
 
 export interface PostListCardProps {
   post: Post;
@@ -28,7 +29,9 @@ const
     }) => {
     const [page, setPage] = useState(1);
 
-    const { data: posts } = useQuery('getForumThreadPosts', () => getForumThreadPosts(thread), {
+    const { data: posts } = useQuery(tuple(['getForumThreadPosts', {
+      thread: thread,
+    }]), () => getForumThreadPosts(thread), {
       onSuccess: (data) => {
         setPage(data.payload.meta.currentPage);
       },

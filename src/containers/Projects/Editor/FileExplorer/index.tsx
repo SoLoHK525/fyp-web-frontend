@@ -28,10 +28,15 @@ import { getProjectFilesResponse } from '../../../../api/project';
 
 export default function FileExplorer(
   {
+
     onFileSelect,
+    endpoint,
+    projectFiles: data,
   }: {
     onFileSelect?: (id: string) => void,
-  }
+    endpoint: string,
+    projectFiles: getProjectFilesResponse
+  },
 ) {
   const queryClient = useQueryClient();
   const theme = useTheme();
@@ -40,16 +45,19 @@ export default function FileExplorer(
   const tree = useRef<TreeRef>();
   const box = useRef<HTMLDivElement>();
 
-  const { data } = useQuery('getProjectFiles', () => {
-    return request<getProjectFilesResponse>(
-      'get',
-      '/api/file',
-      {},
-      true,
-      {},
-      'https://fyp-exector.iamkevin.xyz',
-    );
-  });
+  // const { data } = useQuery('getProjectFiles', () => {
+  //   return request<getProjectFilesResponse>(
+  //     'get',
+  //     '/api/file',
+  //     {},
+  //     true,
+  //     {
+  //       "ngrok-skip-browser-warning": "any",
+  //       "Content-Type": "application/x-www-form-urlencoded",
+  //     },
+  //     endpoint,
+  //   );
+  // });
 
   const [id, setId] = useState<string>('');
   const [newName, setNewName] = useState<string>('');
@@ -75,8 +83,10 @@ export default function FileExplorer(
           name: newName,
         },
         true,
-        {},
-        'https://fyp-exector.iamkevin.xyz',
+        {
+          "ngrok-skip-browser-warning": "any"
+        },
+        endpoint,
       );
     },
     {

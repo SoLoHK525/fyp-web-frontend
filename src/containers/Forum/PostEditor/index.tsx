@@ -1,11 +1,13 @@
-import { Box, Button, CircularProgress, Container, TextField, Typography } from '@mui/material';
-import Spacer from '../../../components/Spacer';
-import { useMutation, useQueryClient } from 'react-query';
-import tuple from '../../../utils/tuple';
-import { Post, publishForumPost, updateForumPost } from '../../../api/forum';
-import { Editor } from '@ckeditor/ckeditor5-core';
 import { useEffect, useState } from 'react';
+
+import { Editor } from '@ckeditor/ckeditor5-core';
+import { Box, Button, CircularProgress, Container, TextField, Typography } from '@mui/material';
 import dynamic from 'next/dynamic';
+import { useMutation, useQueryClient } from 'react-query';
+
+import { Post, publishForumPost, updateForumPost } from '../../../api/forum';
+import Spacer from '../../../components/Spacer';
+import tuple from '../../../utils/tuple';
 
 const TextEditor = dynamic(() => import('../../../components/TextEditor'), {
   ssr: false,
@@ -102,13 +104,14 @@ export default function PostEditor(
 
   const onContentChange = (event: React.ChangeEvent<HTMLInputElement>, value: Editor) => {
     // @ts-ignore
-    setSaved(false);
     setContent(value.getData());
+    setSaved(false);
   };
 
   const onAutoSave = (editor: Editor) => {
     console.log('Autosaving...');
 
+    // @ts-ignore
     setContent(editor.getData());
     updateForumPostMutate();
     setSaved(true);

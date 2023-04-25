@@ -2,7 +2,18 @@
  * lazy load alloy editor
  */
 
-import { Box, Button, CircularProgress, Container, Divider, Grid, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Divider,
+  Grid,
+  Modal,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import moment from 'moment';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
@@ -22,10 +33,13 @@ import PostList from '../../../containers/Forum/PostList';
 import SmallPostCard from '../../../containers/Forum/SmallPostCard';
 import tuple from '../../../utils/tuple';
 import CommentCard from '../../../containers/Forum/CommentCard';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useAuthentication } from '../../../contexts/AuthenticationContext';
+import { NewThreadModal } from '../../../containers/Forum/NewThreadModal';
 
 export default function NewForumPost() {
   const router = useRouter();
+  const auth = useAuthentication();
   const { thread, postId } = router.query;
 
   const threadString = thread as string;
@@ -73,6 +87,8 @@ export default function NewForumPost() {
     return commentTree;
   }, [getForumPostCommentsData]);
 
+  const [showNewPostModal, setShowNewPostModal] = useState(false);
+
   return (
     <>
       <CustomAppBar />
@@ -86,7 +102,7 @@ export default function NewForumPost() {
             <Spacer />
             <Stack color='black' direction='row' spacing={2}>
               <Button color='inherit' variant='text'>Drafts</Button>
-              <Button color='inherit' variant='outlined'>New Post</Button>
+              <Button color='inherit' variant='outlined' onClick={() => { setShowNewPostModal(true) }}>New Post</Button>
             </Stack>
           </Box>
           <Divider />
@@ -108,16 +124,20 @@ export default function NewForumPost() {
                   <Grid item lg={8}>
                     <PostCard post={getForumPostData.payload} />
 
-                    <Box>
-                      <Typography variant='caption'>Comment:</Typography>
-                      <Box mt={1}>
-                        <CommentEditor
-                          post={getForumPostData.payload}
-                          target='post'
-                          thread={threadString}
-                        />
-                      </Box>
-                    </Box>
+                    {
+                      auth.isAuthenticated && (
+                        <Box>
+                          <Typography variant='caption'>Comment:</Typography>
+                          <Box mt={1}>
+                            <CommentEditor
+                              post={getForumPostData.payload}
+                              target='post'
+                              thread={threadString}
+                            />
+                          </Box>
+                        </Box>
+                      )
+                    }
                     <Box my={4}>
                       <Divider />
                     </Box>
@@ -160,6 +180,7 @@ export default function NewForumPost() {
         </Container>
       </Box>
       <Footer />
+      <NewThreadModal setShowNewPostModal={setShowNewPostModal} showNewPostModal={showNewPostModal} thread={threadString} />
     </>
   );
 }

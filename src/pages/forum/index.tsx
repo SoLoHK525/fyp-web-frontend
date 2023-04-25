@@ -5,12 +5,14 @@ import Spacer from '../../components/Spacer';
 import { Refresh } from '@mui/icons-material';
 import { useQueryClient } from 'react-query';
 import ThreadList from '../../containers/Forum/ThreadList';
+import { useAuthentication } from '../../contexts/AuthenticationContext';
 
 export default function Forum() {
+  const auth = useAuthentication();
   const queryClient = useQueryClient();
 
-  const refreshProjects = () => {
-    queryClient.invalidateQueries('getAllUserProjects');
+  const refreshThreads = () => {
+    queryClient.invalidateQueries('getForumThreads');
   };
 
   return (
@@ -22,13 +24,19 @@ export default function Forum() {
             <h1>Forum</h1>
             <Spacer />
             <Stack direction='row' spacing={2} color='black'>
-              <Button variant='outlined' color='inherit' onClick={refreshProjects}><Refresh /></Button>
-              <Button variant='outlined' color='inherit'>New Thread</Button>
+              <Button variant='outlined' color='inherit' onClick={refreshThreads}><Refresh /></Button>
+
+              {
+                auth.isAuthenticated && auth.user?.role === 'teacher' &&
+                (
+                  <Button variant='outlined' color='inherit'>New Thread</Button>
+                )
+              }
             </Stack>
           </Box>
           <Divider />
           <Box mt={4}>
-            <Typography variant="subtitle2">Threads</Typography>
+            <Typography variant='subtitle2'>Threads</Typography>
           </Box>
           <ThreadList />
         </Container>
